@@ -44,36 +44,50 @@ namespace MDD4All.DevOpsObserver.DataProviders.Github
                 request.Headers.Add("X-GitHub-Api-Version", "2022-11-28");
                 request.Headers.Add("User-Agent", "DevOpsObserver");
 
-                HttpResponseMessage response = await _httpClient.SendAsync(request);
-                HttpStatusCode responseStatusCode = response.StatusCode;
-
-                if (responseStatusCode == HttpStatusCode.OK)
+                try
                 {
-                    string responseBody = await response.Content.ReadAsStringAsync();
-                    WorkflowRunResponse workflowRunResponse = JsonConvert.DeserializeObject<WorkflowRunResponse>(responseBody);
+                    HttpResponseMessage response = await _httpClient.SendAsync(request);
+                    HttpStatusCode responseStatusCode = response.StatusCode;
 
-                    if (workflowRunResponse != null && workflowRunResponse.TotalCount > 0)
+                    if (responseStatusCode == HttpStatusCode.OK)
                     {
-                        List<DevOpsStatusInformation> devOpsStatusInformation = ConvertGithubResponseToStatus(workflowRunResponse);
+                        string responseBody = await response.Content.ReadAsStringAsync();
+                        WorkflowRunResponse workflowRunResponse = JsonConvert.DeserializeObject<WorkflowRunResponse>(responseBody);
 
-                        foreach (DevOpsStatusInformation devOpsStatus in devOpsStatusInformation)
+                        if (workflowRunResponse != null && workflowRunResponse.TotalCount > 0)
                         {
-                            devOpsStatus.Alias = devOpsObservable.Alias;
-                            result.Add(devOpsStatus);
+                            List<DevOpsStatusInformation> devOpsStatusInformation = ConvertGithubResponseToStatus(workflowRunResponse);
+
+                            foreach (DevOpsStatusInformation devOpsStatus in devOpsStatusInformation)
+                            {
+                                devOpsStatus.Alias = devOpsObservable.Alias;
+                                result.Add(devOpsStatus);
+                            }
                         }
-                    }
-                    else
-                    {
-                        DevOpsStatusInformation devOpsStatusInformation = new DevOpsStatusInformation
+                        else
                         {
-                            RepositoryName = devOpsObservable.RepositoryName,
-                            Branch = devOpsObservable.RepositoryBranch,
-                            Alias = devOpsObservable.Alias,
-                            GitServerType = "Github",
-                        };
-                        result.Add(devOpsStatusInformation);
-                    }
+                            DevOpsStatusInformation devOpsStatusInformation = new DevOpsStatusInformation
+                            {
+                                RepositoryName = devOpsObservable.RepositoryName,
+                                Branch = devOpsObservable.RepositoryBranch,
+                                Alias = devOpsObservable.Alias,
+                                GitServerType = "Github",
+                            };
+                            result.Add(devOpsStatusInformation);
+                        }
 
+                    }
+                }
+                catch(Exception exception)
+                {
+                    DevOpsStatusInformation devOpsStatusInformation = new DevOpsStatusInformation
+                    {
+                        RepositoryName = devOpsObservable.RepositoryName,
+                        Branch = devOpsObservable.RepositoryBranch,
+                        Alias = devOpsObservable.Alias,
+                        GitServerType = "Github",
+                    };
+                    result.Add(devOpsStatusInformation);
                 }
             }
 
