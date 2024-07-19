@@ -66,32 +66,34 @@ namespace MDD4All.DevOpsObserver.DataProviders.Github
                         }
                         else
                         {
-                            DevOpsStatusInformation devOpsStatusInformation = new DevOpsStatusInformation
-                            {
-                                RepositoryName = devOpsObservable.RepositoryName,
-                                Branch = devOpsObservable.RepositoryBranch,
-                                Alias = devOpsObservable.Alias,
-                                GitServerType = "Github",
-                            };
-                            result.Add(devOpsStatusInformation);
+                            CreateUnknowStateData(result, devOpsObservable);
                         }
 
+                    }
+                    else
+                    {
+                        CreateUnknowStateData(result, devOpsObservable);
                     }
                 }
                 catch(Exception exception)
                 {
-                    DevOpsStatusInformation devOpsStatusInformation = new DevOpsStatusInformation
-                    {
-                        RepositoryName = devOpsObservable.RepositoryName,
-                        Branch = devOpsObservable.RepositoryBranch,
-                        Alias = devOpsObservable.Alias,
-                        GitServerType = "Github",
-                    };
-                    result.Add(devOpsStatusInformation);
+                    CreateUnknowStateData(result, devOpsObservable);
                 }
             }
 
             return result;
+        }
+
+        private void CreateUnknowStateData(List<DevOpsStatusInformation> result, DevOpsObservable devOpsObservable)
+        {
+            DevOpsStatusInformation devOpsStatusInformation = new DevOpsStatusInformation
+            {
+                RepositoryName = devOpsObservable.RepositoryName,
+                Branch = devOpsObservable.RepositoryBranch,
+                Alias = devOpsObservable.Alias,
+                GitServerType = "Github",
+            };
+            result.Add(devOpsStatusInformation);
         }
 
         private List<DevOpsStatusInformation> ConvertGithubResponseToStatus(WorkflowRunResponse workflowRunResponse)
@@ -132,11 +134,11 @@ namespace MDD4All.DevOpsObserver.DataProviders.Github
 
                 if(run.Status == "completed" && run.Conclusion == "success")
                 {
-                    statusInformation.Status = DevOpsStatus.Success;
+                    statusInformation.StatusValue = DevOpsStatus.Success;
                 }
                 else if(run.Status == "completed" && run.Conclusion == "failure")
                 {
-                    statusInformation.Status = DevOpsStatus.Fail;
+                    statusInformation.StatusValue = DevOpsStatus.Fail;
                 }
 
                 result.Add(statusInformation);
